@@ -2,46 +2,50 @@
 
 // In a trie, each node represents a single character of a key. The root of the trie represents an empty string, and each path from the root to a leaf node represents a specific key. Each node in the trie may have links to its children, where each link represents a different character. Nodes may also store additional information, such as values associated with keys.
 
-function TreeNode() {
-  this.children = {};
-  this.isEndOfWord = false;
+class TreeNode {
+  constructor() {
+    this.children = {};
+    this.isEndOfWord = false;
+  }
 }
 
-function Trie() {
-  this.root = new TreeNode();
+class Trie {
+  constructor() {
+    this.root = new TreeNode();
 
-  this.insert = function (word) {
-    let node = this.root;
-    for (let char of word) {
-      if (!node.children[char]) {
-        node.children[char] = new TreeNode();
+    this.insert = function (word) {
+      let node = this.root;
+      for (let char of word) {
+        if (!node.children[char]) {
+          node.children[char] = new TreeNode();
+        }
+        node = node.children[char];
       }
-      node = node.children[char];
-    }
-    node.isEndOfWord = true;
-  };
+      node.isEndOfWord = true;
+    };
 
-  this.search = function (word) {
-    let node = this.root;
-    for (let char of word) {
-      if (!node.children[char]) {
-        return false;
+    this.search = function (word) {
+      let node = this.root;
+      for (let char of word) {
+        if (!node.children[char]) {
+          return false;
+        }
+        node = node.children[char];
       }
-      node = node.children[char];
-    }
-    return node.isEndOfWord;
-  };
+      return node.isEndOfWord;
+    };
 
-  this.prefix = function (word) {
-    let node = this.root;
-    for (let char of word) {
-      if (!node.children[char]) {
-        return false;
+    this.prefix = function (word) {
+      let node = this.root;
+      for (let char of word) {
+        if (!node.children[char]) {
+          return false;
+        }
+        node = node.children[char];
       }
-      node = node.children[char];
-    }
-    return true;
-  };
+      return true;
+    };
+  }
 }
 
 let trie = new Trie();

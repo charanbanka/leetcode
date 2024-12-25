@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .controls input {
+            width: 60px;
+            margin-right: 10px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .maze-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .maze-level {
+            display: inline-block;
+            border: 2px solid #333;
+            margin: 10px;
+        }
+        .level-label {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #999;
+            display: inline-block;
+            vertical-align: top;
+            background: white;
+            position: relative;
+        }
+        .blocked {
+            background: #333;
+        }
+        .rat {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #ff4444;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+            transition: all 0.5s ease;
+        }
+        .destination {
+            background: #4CAF50;
+        }
+        .path {
+            background: #fff3cd;
+        }
+        .current-level {
+            border: 3px solid #ff4444;
+        }
+        .up-arrow, .down-arrow {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 15px;
+            background: #4a90e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+        }
+        .up-arrow {
+            top: 5px;
+        }
+        .down-arrow {
+            bottom: 5px;
+        }
+        .victory {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        .coordinates {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <label>Rows (X): <input type="number" id="rows" value="4" min="2" max="8"></label>
+            <label>Columns (Y): <input type="number" id="cols" value="4" min="2" max="8"></label>
+            <label>Levels (Z): <input type="number" id="levels" value="3" min="2" max="5"></label>
+            <label>Blocked cells: <input type="number" id="blocks" value="10" min="0"></label>
+            <button onclick="generateMaze()">Generate Maze</button>
+            <button id="startBtn" onclick="startSolving()">Start</button>
+            <button id="pauseBtn" onclick="pauseSolving()" disabled>Pause</button>
+            <button id="resetBtn" onclick="resetMaze()" disabled>Reset</button>
+        </div>
+        <div id="maze-container" class="maze-container"></div>
+    </div>
+    <div id="coordinates" class="coordinates">
+        Position: (0, 0, 0)
+    </div>
+    <div id="victory" class="victory">
+        <h2>Victory! The rat found the cheese! 🎉</h2>
+    </div>
+
+    <script>
+        let maze = [];
+        let N, M, L; // rows, columns, levels
+        let ratPos = { x: 0, y: 0, z: 0 };
+        let solving = false;
+        let paused = false;
+        let solution = [];
+        let currentStep = 0;
+
+        function generateMaze() {
+            N = parseInt(document.getElementById('rows').value);
+            M = parseInt(document.getElementById('cols').value);
+            L = parseInt(document.getElementById('levels').value);
+            const blocks = parseInt(document.getElementById('blocks').value);
+            
+            // Initialize 3D maze
+            maze = Array(L).fill().map(() => 
+                Array(N).fill().map(() => 
+                    Array(M).fill(0)
+                )
+            );
+            
+            // Place random blocks
+            let blocksPlaced = 0;
+            while (blocksPlaced < blocks) {
+                const x = Math.floor(Math.random() * N);
+                const y = Math.floor(Math.random() * M);
+                const z = Math.floor(Math.random() * L);
+                if ((x !== 0 || y !== 0 || z !== 0) && 
+                    (x !== N-1 || y !== M-1 || z !== L-1) && 
+                    maze[z][x][y] === 0) {
+                    maze[z][x][y] = 1;
+                    blocksPlaced++;
+                }
+            }
+            
+            renderMaze();
+            resetControls();
+        }
+
+        function renderMaze() {
+            const container = document.getElementById('maze-container');
+            container.innerHTML = '';
+            
+            for (let z = 0; z < L; z++) {
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'maze-level';
+                levelDiv.id = `level-${z}`;
+                if (z === ratPos.z) levelDiv.classList.add('current-level');
+                
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'level-label';
+                labelDiv.textContent = `Level ${z + 1}`;
+                levelDiv.appendChild(labelDiv);
+                
+                const mazeDiv = document.createElement('div');
+                mazeDiv.style.width = (M * 52) + 'px';
+                
+                for (let x = 0; x < N; x++) {
+                    for (let y = 0; y < M; y++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        if (maze[z][x][y] === 1) cell.classList.add('blocked');
+                        if (x === N-1 && y === M-1 && z === L-1) cell.classList.add('destination');
+                        
+                        if (x === ratPos.x && y === ratPos.y && z === ratPos.z) {
+                            const rat = document.createElement('div');
+                            rat.className = 'rat';
+                            rat.id = 'rat';
+                            cell.appendChild(rat);
+                        }
+                        mazeDiv.appendChild(cell);
+                    }
+                }
+                levelDiv.appendChild(mazeDiv);
+                container.appendChild(levelDiv);
+            }
+        }
+
+        function resetControls() {
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('victory').style.display = 'none';
+            solving = false;
+            paused = false;
+            ratPos = { x: 0, y: 0, z: 0 };
+            solution = [];
+            currentStep = 0;
+            updateCoordinates();
+        }
+
+        function updateCoordinates() {
+            document.getElementById('coordinates').textContent = 
+                `Position: (${ratPos.x}, ${ratPos.y}, ${ratPos.z})`;
+        }
+
+        function solveMaze(x, y, z, path = []) {
+            // Base cases
+            if (x < 0 || x >= N || y < 0 || y >= M || z < 0 || z >= L || maze[z][x][y] === 1) return false;
+            if (path.find(p => p.x === x && p.y === y && p.z === z)) return false;
+            
+            path.push({x, y, z});
+            
+            // Reached destination
+            if (x === N-1 && y === M-1 && z === L-1) {
+                solution = [...path];
+                return true;
+            }
+            
+            // Try all directions: right, down, left, up, up-level, down-level
+            if (solveMaze(x, y+1, z, path) || 
+                solveMaze(x+1, y, z, path) || 
+                solveMaze(x, y-1, z, path) || 
+                solveMaze(x-1, y, z, path) ||
+                solveMaze(x, y, z+1, path) ||
+                solveMaze(x, y, z-1, path)) {
+                return true;
+            }
+            
+            path.pop();
+            return false;
+        }
+
+        async function moveRat() {
+            if (!solving || paused) return;
+            
+            if (currentStep < solution.length) {
+                const pos = solution[currentStep];
+                ratPos = pos;
+                updateCoordinates();
+                
+                // Update maze visualization
+                renderMaze();
+                
+                // Mark the path
+                const cells = document.querySelector(`#level-${pos.z}`).getElementsByClassName('cell');
+                cells[pos.x * M + pos.y].classList.add('path');
+                
+                currentStep++;
+                
+                // Check if reached destination
+                if (currentStep === solution.length) {
+                    document.getElementById('victory').style.display = 'block';
+                    document.getElementById('pauseBtn').disabled = true;
+                    return;
+                }
+                
+                // Add delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                moveRat();
+            }
+        }
+
+        function startSolving() {
+            if (!solving) {
+                solving = true;
+                solveMaze(0, 0, 0);
+                if (solution.length === 0) {
+                    alert('No solution exists!');
+                    return;
+                }
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('resetBtn').disabled = false;
+                moveRat();
+            }
+        }
+
+        function pauseSolving() {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+            if (!paused) moveRat();
+        }
+
+        function resetMaze() {
+            const mazes = document.getElementsByClassName('maze-level');
+            for (let maze of mazes) {
+                const cells = maze.getElementsByClassName('cell');
+                for (let cell of cells) {
+                    cell.classList.remove('path');
+                }
+            }
+            ratPos = { x: 0, y: 0, z: 0 };
+            renderMaze();
+            resetControls();
+        }
+
+        // Initialize maze on load
+        generateMaze();
+    </script>
+</body>
+</html>

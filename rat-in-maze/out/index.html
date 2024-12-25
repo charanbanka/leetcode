@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 0;
+        margin: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+      }
+      .title {
+        color: blueviolet;
+        text-transform: capitalize;
+        font-size: large;
+        text-align: center;
+      }
+      .options {
+        background-color: antiquewhite;
+        padding: 20px;
+        margin: 20px;
+        gap: 10px;
+        text-align: center;
+      }
+      .label {
+      }
+
+      .options input {
+        padding: 5px;
+        border-radius: 5px; /* Rounded borders */
+        border: 1px solid green;
+        max-width: 40px;
+      }
+
+      .options input:focus {
+        border: 1px solid blue; /* Thicker, blue border on focus */
+        background-color: lightyellow; /* Light yellow background on focus */
+        color: darkblue; /* Dark blue text color */
+        box-shadow: 0 0 5px 2px rgba(0, 128, 0, 0.5); /* Greenish glow */
+        outline: none;
+      }
+      .controls {
+        margin-top: 10px;
+      }
+
+      button {
+        margin: 5px;
+        padding: 8px 16px;
+        background-color: #4caf50;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        color: white;
+      }
+
+      button:hover {
+        background-color: rgb(2, 106, 2);
+      }
+
+      .maze {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .disabled {
+        pointer-events: none;
+        background-color: gray;
+        color: lightgray;
+        cursor: not-allowed;
+      }
+      button:disabled {
+        background-color: gray;
+        color: lightgray;
+        cursor: not-allowed;
+      }
+      button:disabled:hover {
+        background-color: gray;
+        color: lightgray;
+        cursor: not-allowed;
+      }
+
+      .maze {
+        display: inline-block;
+        margin: 20px auto;
+        /* background-color: antiquewhite; */
+        /* border: 1px solid blue; */
+      }
+      .cell {
+        width: 50px;
+        height: 50px;
+        border: 1px solid rgb(232, 214, 181);
+        display: inline-block;
+        vertical-align: top;
+        background: white;
+        position: relative;
+      }
+      .blocked {
+        background-color: #333;
+      }
+      .source {
+        background-color: blue;
+      }
+      .end {
+        background-color: #4caf50;
+      }
+      .rat {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: red;
+        left: 10px;
+        top: 10px;
+      }
+
+      .path {
+        background-color: bisque;
+      }
+      .victory {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        padding: 10px;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        display: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h4 class="title">Rat in maze</h4>
+      <div class="options">
+        <div class="">
+          <label>
+            Rows
+            <input
+              name="rows"
+              id="rows"
+              type="number"
+              min="2"
+              max="10"
+              value="4"
+            />
+          </label>
+          <label>
+            Cols
+            <input
+              name="cols"
+              id="cols"
+              type="number"
+              min="2"
+              max="10"
+              value="4"
+            />
+          </label>
+          <label>
+            blocked
+            <input
+              name="blockedCells"
+              id="blockedCells"
+              type="number"
+              min="4"
+              value="4"
+            />
+          </label>
+        </div>
+        <div class="controls">
+          <button id="generateMaze" onclick="generateMaze()">
+            Generate Maze
+          </button>
+          <button id="start" onclick="startMaze()">start</button>
+          <button id="pause" onclick="pauseMaze()" disabled>pause</button>
+
+          <button
+            type="button"
+            id="reset"
+            class=""
+            onclick="resetMaze()"
+            disabled
+          >
+            reset
+          </button>
+        </div>
+      </div>
+      <div id="maze" class="maze"></div>
+    </div>
+    <div
+      id="victory"
+      class="victory"
+      onclick="closeVictoryMessage()"
+      title="click to close"
+    >
+      <h4>Victory! Rat found cheese.</h4>
+    </div>
+    <script></script>
+    <script type="text/javascript" src="index.js"></script>
+  </body>
+</html>

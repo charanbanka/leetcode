@@ -10,7 +10,7 @@ function LinkedListHead(list) {
     let currentNode = new ListNode(num);
     previousNode.next = currentNode;
     previousNode = currentNode;
-  }
+  }   
   return headNode.next;
 }
 

@@ -34,35 +34,33 @@ class AVLTree {
   }
 
   // Right rotation
-  rotateRight(y) {
-    const x = y.left;
-    const T2 = x.right;
+  rotateRight(node) {
+    const root = node.left;
 
     // Perform rotation
-    x.right = y;
-    y.left = T2;
+    node.left = root.right; // Move root's right child to node's left
+    root.right = node; // Rotate node under root
 
     // Update heights
-    this.updateHeight(y);
-    this.updateHeight(x);
+    this.updateHeight(node);
+    this.updateHeight(root);
 
-    return x;
+    return root;
   }
 
   // Left rotation
-  rotateLeft(x) {
-    const y = x.right;
-    const T2 = y.left;
+  rotateLeft(node) {
+    const root = node.right;
 
     // Perform rotation
-    y.left = x;
-    x.right = T2;
+    node.right = root.left;
+    root.left = node;
 
     // Update heights
-    this.updateHeight(x);
-    this.updateHeight(y);
+    this.updateHeight(node);
+    this.updateHeight(root);
 
-    return y;
+    return root;
   }
 
   // Insert a key into the AVL Tree
@@ -129,11 +127,31 @@ class AVLTree {
 // Example usage:
 const avlTree = new AVLTree();
 
-avlTree.insert(20);
-avlTree.insert(10);
-avlTree.insert(30);
-avlTree.insert(25);
+avlTree.insert(-10);
+avlTree.insert(-5);
+avlTree.insert(0);
+avlTree.insert(5);
 avlTree.insert(27);
 
-console.log("In-order traversal of AVL Tree:");
+console.log("In-order traversal of AVL Tree:", avlTree.root);
 avlTree.inOrderTraversal();
+
+// console.log(Math.max(null, null) == 0);
+
+
+
+let graph = new Array(2).fill(0).map(() => []);
+    
+// Fill the graph with prerequisites
+for (let [course, pre] of [[1,0],[0,1]]) {
+    graph[course].push(pre);
+}
+let visited = new Array(2).fill(0);
+
+console.log("gr",graph,visited)
+
+let n =4;
+let parent = Array.from({ length: n }, (_, i) => i);
+    let rank = new Array(n).fill(0);
+
+console.log("parent",parent,rank)

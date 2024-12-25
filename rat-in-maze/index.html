@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .controls input {
+            width: 60px;
+            margin-right: 10px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .maze {
+            display: inline-block;
+            border: 2px solid #333;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #999;
+            display: inline-block;
+            vertical-align: top;
+            background: white;
+            position: relative;
+        }
+        .blocked {
+            background: #333;
+        }
+        .rat {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #ff4444;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+            transition: all 0.5s ease;
+        }
+        .destination {
+            background: #4CAF50;
+        }
+        .path {
+            background: #fff3cd;
+        }
+        .victory {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <label>Rows: <input type="number" id="rows" value="5" min="2" max="10"></label>
+            <label>Columns: <input type="number" id="cols" value="5" min="2" max="10"></label>
+            <label>Blocked cells: <input type="number" id="blocks" value="5" min="0"></label>
+            <button onclick="generateMaze()">Generate Maze</button>
+            <button id="startBtn" onclick="startSolving()">Start</button>
+            <button id="pauseBtn" onclick="pauseSolving()" disabled>Pause</button>
+            <button id="resetBtn" onclick="resetMaze()" disabled>Reset</button>
+        </div>
+        <div id="maze" class="maze"></div>
+    </div>
+    <div id="victory" class="victory">
+        <h2>Victory! The rat found the cheese! 🎉</h2>
+    </div>
+
+    <script>
+        let maze = [];
+        let N, M;
+        let ratPos = { x: 0, y: 0 };
+        let solving = false;
+        let paused = false;
+        let solution = [];
+        let currentStep = 0;
+
+        function generateMaze() {
+            N = parseInt(document.getElementById('rows').value);
+            M = parseInt(document.getElementById('cols').value);
+            const blocks = parseInt(document.getElementById('blocks').value);
+            
+            // Initialize maze
+            maze = Array(N).fill().map(() => Array(M).fill(0));
+            
+            // Place random blocks
+            let blocksPlaced = 0;
+            while (blocksPlaced < blocks) {
+                const x = Math.floor(Math.random() * N);
+                const y = Math.floor(Math.random() * M);
+                if ((x !== 0 || y !== 0) && (x !== N-1 || y !== M-1) && maze[x][y] === 0) {
+                    maze[x][y] = 1;
+                    blocksPlaced++;
+                }
+            }
+            
+            renderMaze();
+            resetControls();
+        }
+
+        function renderMaze() {
+            const mazeEl = document.getElementById('maze');
+            mazeEl.innerHTML = '';
+            mazeEl.style.width = (M * 52) + 'px'; // 50px cell + 2px border
+            
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < M; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (maze[i][j] === 1) cell.classList.add('blocked');
+                    if (i === N-1 && j === M-1) cell.classList.add('destination');
+                    if (i === 0 && j === 0) {
+                        const rat = document.createElement('div');
+                        rat.className = 'rat';
+                        rat.id = 'rat';
+                        cell.appendChild(rat);
+                    }
+                    mazeEl.appendChild(cell);
+                }
+            }
+        }
+
+        function resetControls() {
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('victory').style.display = 'none';
+            solving = false;
+            paused = false;
+            ratPos = { x: 0, y: 0 };
+            solution = [];
+            currentStep = 0;
+        }
+
+        function solveMaze(maze, x, y, path = []) {
+            // Base cases
+            if (x < 0 || x >= N || y < 0 || y >= M || maze[x][y] === 1) return false;
+            if (path.find(p => p.x === x && p.y === y)) return false;
+            
+            path.push({x, y});
+            
+            // Reached destination
+            if (x === N-1 && y === M-1) {
+                solution = [...path];
+                return true;
+            }
+            
+            // Try all directions: right, down, left, up
+            if (solveMaze(maze, x, y+1, path) || 
+                solveMaze(maze, x+1, y, path) || 
+                solveMaze(maze, x, y-1, path) || 
+                solveMaze(maze, x-1, y, path)) {
+                return true;
+            }
+            
+            path.pop();
+            return false;
+        }
+
+        async function moveRat() {
+            if (!solving || paused) return;
+            
+            if (currentStep < solution.length) {
+                const pos = solution[currentStep];
+                const rat = document.getElementById('rat');
+                rat.style.transform = `translate(${pos.y * 52}px, ${pos.x * 52}px)`;
+                
+                // Mark the path
+                const cells = document.getElementsByClassName('cell');
+                cells[pos.x * M + pos.y].classList.add('path');
+                
+                currentStep++;
+                
+                // Check if reached destination
+                if (currentStep === solution.length) {
+                    document.getElementById('victory').style.display = 'block';
+                    document.getElementById('pauseBtn').disabled = true;
+                    return;
+                }
+                
+                // Add delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                moveRat();
+            }
+        }
+
+        function startSolving() {
+            if (!solving) {
+                solving = true;
+                solveMaze(maze, 0, 0);
+                if (solution.length === 0) {
+                    alert('No solution exists!');
+                    return;
+                }
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('resetBtn').disabled = false;
+                moveRat();
+            }
+        }
+
+        function pauseSolving() {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+            if (!paused) moveRat();
+        }
+
+        function resetMaze() {
+            const cells = document.getElementsByClassName('cell');
+            for (let cell of cells) {
+                cell.classList.remove('path');
+            }
+            const rat = document.getElementById('rat');
+            rat.style.transform = 'translate(0px, 0px)';
+            resetControls();
+        }
+
+        // Initialize maze on load
+        generateMaze();
+    </script>
+</body>
+</html>

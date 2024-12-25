@@ -1,0 +1,43 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Times New Roman", Times, serif;
+}
+
+.container {
+  max-width: 800px;
+  margin: 5px auto;
+}
+
+.title {
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.header_ {
+  background-color: aquamarine;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+}
+
+.controls {
+}
+
+input {
+  padding: 5px;
+  border-radius: 5px;
+  max-width: 40px;
+  border: 1px solid green;  
+}
+
+input:focus {
+  border: 1px solid blue;
+  background-color: lightyellow;
+  box-shadow: 0 0 5px 2px red;
+  outline: none;
+}
+
+.chart-container {
+  display: inline-block;
+}
