@@ -24,11 +24,12 @@ function reverseList(head) {
     currentNode.next = previousNode;
     previousNode = currentNode;
     currentNode = nextNode;
-    head = previousNode;
+    // head = previousNode;
   }
 
-  console.log("head", head);
-  return head;
+  console.log("head", previousNode);
+  return previousNode;
 }
 
-reverseList(head)
+reverseList(head);
+

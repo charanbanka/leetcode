@@ -187,8 +187,86 @@ function testcase(arr1, arr2) {
   return result;
 }
 
-let test1_input1 = ["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]
-let test1_input2 = [[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]
+let test1_input1 = [
+  "LRUCache",
+  "put",
+  "put",
+  "get",
+  "put",
+  "get",
+  "put",
+  "get",
+  "get",
+  "get",
+];
+let test1_input2 = [
+  [2],
+  [1, 1],
+  [2, 2],
+  [1],
+  [3, 3],
+  [2],
+  [4, 4],
+  [1],
+  [3],
+  [4],
+];
 
 testcase(test1_input1, test1_input2);
 
+//practise
+
+function ListNode(val, left, right) {
+  this.val = val;
+  this.left = left;
+  this.right = right;
+}
+
+var LRUCache = function (capacity) {
+  this.capacity = capacity;
+  this.cacheMap = new Map();
+  this.head = null;
+  this.tail = null;
+};
+
+LRUCache.prototype.put = function (key, value) {
+  let existNode = this.cacheMap.get(key);
+  if (existNode) {
+    existNode.val.value = value;
+    this.updateList(existNode);
+  } else {
+    let newNode = new ListNode({ key, value });
+    cacheMap.set(key, newNode);
+    let size = this.cacheMap.size;
+
+    if (this.capacity === size) {
+    } else {
+    }
+  }
+};
+
+LRUCache.prototype.get = function (key) {
+  let existNode = this.cacheMap.get(key);
+  if (existNode) {
+    let value = existNode.val.value;
+    this.updateList(existNode);
+    return value;
+  }
+  return -1;
+};
+
+// [1,1]->[2,2]->[3,3]
+
+LRUCache.prototype.updateList = function (currentNode) {
+  if (currentNode === this.head) return; // no need update
+
+  if (currentNode.left) currentNode.left.right = currentNode.right;
+  if (currentNode.right) currentNode.rightleft = currentNode.left;
+
+  if (currentNode === this.tail) this.tail = currentNode.left;
+
+  currentNode.right = this.head;
+  currentNode.left = null;
+  if (this.head) this.head.left = currentNode;
+  this.head = currentNode;
+};

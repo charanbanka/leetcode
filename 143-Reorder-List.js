@@ -38,41 +38,68 @@ const { LinkedListLeet } = require("./Linked-List-LeetCode");
  */
 var reorderList = function (head) {
   if (!head || !head.next || !head.next.next) return head;
-  let curNode = head;
-  let stack = [];
-  while (curNode) {
-    stack.push(curNode);
-    curNode = curNode.next;
-  }
-  let len = stack.length;
-  if(len <3) return head;
+  // let curNode = head;
+  // let stack = [];
+  // while (curNode) {
+  //   stack.push(curNode);
+  //   curNode = curNode.next;
+  // }
+  // let len = stack.length;
+  // if (len < 3) return head;
 
-  curNode = null;
-  for (let i = 0, j = len - 1; i <= j; i++, j--) {
-    let firstNode = stack[i];
-    let lastNode = stack[j];
-    if (i == j) {
-      curNode.next = firstNode;
-      firstNode.next = null;
-    } else if (i == 0) {
-      curNode = firstNode;
-      firstNode.next = lastNode;
-      lastNode.next = null;
-      curNode = lastNode;
-    } else {
-      curNode.next = firstNode;
-      firstNode.next = lastNode;
-      lastNode.next = null;
-      curNode = lastNode;
-    }
+  // curNode = null;
+  // for (let i = 0, j = len - 1; i <= j; i++, j--) {
+  //   let firstNode = stack[i];
+  //   let lastNode = stack[j];
+  //   if (i == j) {
+  //     curNode.next = firstNode;
+  //     firstNode.next = null;
+  //   } else if (i == 0) {
+  //     curNode = firstNode;
+  //     firstNode.next = lastNode;
+  //     lastNode.next = null;
+  //     curNode = lastNode;
+  //   } else {
+  //     curNode.next = firstNode;
+  //     firstNode.next = lastNode;
+  //     lastNode.next = null;
+  //     curNode = lastNode;
+  //   }
+  // }
+
+  let slow = head;
+  let fast = head;
+
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
   }
+
+  let stack = [];
+  let cur = slow.next;
+  slow.next = null; //remove link
+  while (cur) {
+    stack.push(cur);
+    cur = cur.next;
+  }
+
+  cur = head;
+  while (stack.length) {
+    let nextNode = cur.next;
+
+    let top = stack.pop();
+    cur.next = top;
+    top.next = nextNode;
+    cur = nextNode;
+  }
+  console.log(head);
   return head;
 };
 
 let LinkedListHead = LinkedListLeet.LinkedListHead;
 
-let head = reorderList(LinkedListHead([1, 2, 3, 4, 5]))
-LinkedListLeet.DisplayNodes(head)
+let head = reorderList(LinkedListHead([1, 2, 3, 4, 5]));
+LinkedListLeet.DisplayNodes(head);
 
-head = reorderList(LinkedListHead([]))
-LinkedListLeet.DisplayNodes(head)
+head = reorderList(LinkedListHead([]));
+LinkedListLeet.DisplayNodes(head);
